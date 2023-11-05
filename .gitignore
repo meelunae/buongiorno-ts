@@ -1,0 +1,10 @@
+# No build/modules files
+build
+node_modules
+
+# Ignoring MongoDB folder for Docker container
+data
+
+.DS_Store
+.env
+package-lock.json
