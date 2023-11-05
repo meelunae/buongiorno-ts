@@ -1,9 +1,12 @@
-# No build/modules files
+# TS Build + Node Modules
 build
 node_modules
 
-# Ignoring MongoDB folder for Docker container
+# MongoDB folder for Docker container
 data
+
+# IntelliJ stuff
+.idea
 
 .DS_Store
 .env
