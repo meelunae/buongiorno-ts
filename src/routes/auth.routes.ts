@@ -1,6 +1,7 @@
 import * as bcrypt from "bcrypt";
 import {FastifyInstance} from "fastify";
 import { User } from "../models/user.model";
+import * as jwt from "jsonwebtoken";
 
 interface ILoginBody {
     username: string;
@@ -63,20 +64,32 @@ async function routes(server: FastifyInstance, options: Object) {
         }
     );
 
-    server.post<{Body: ILoginBody}>("/login", async (request, reply) => {
-        const { username, password } = request.body
-        const matchedUser = await User.findOne({$or: [{"username": username}, {"email": username}]});
-        if (!matchedUser) {
-           return reply.send("Wrong username or password.");
-        }
-        if(!matchedUser.isActive) {
-           return reply.send("This account is not active yet.");
-        }
-        const passwordMatch = await bcrypt.compare(password, matchedUser.password);
-        if(!passwordMatch) {
-            return reply.send("Wrong username or password.");
-        }
-        return reply.send("Successfully authenticated! :)");
-    })
-}
+    server.post<{Body: ILoginBody}>(
+        "/login",
+        async (request, reply) => {
+            const { username, password } = request.body
+            const matchedUser = await User.findOne({$or: [{"username": username}, {"email": username}]});
+            if (!matchedUser) {
+               return reply.send("Wrong username or password.");
+            }
+            if(!matchedUser.isActive) {
+               return reply.send("This account is not active yet.");
+            }
+            const passwordMatch = await bcrypt.compare(password, matchedUser.password);
+            if(!passwordMatch) {
+                return reply.send("Wrong username or password.");
+            }
+
+            const tokenPayload = {
+                sub: matchedUser._id,
+                username: username,
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+                iat: Math.floor(Date.now() / 1000)
+            }
+            const tokenSecretKey = process.env.JWT_SECRET!; // force unwrap to be removed
+            const token = jwt.sign(tokenPayload, tokenSecretKey);
+
+            return reply.send({"token": token, "iat": tokenPayload.iat});
+        });
+};
 module.exports = routes;
