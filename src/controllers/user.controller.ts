@@ -1,6 +1,6 @@
 import {FastifyReply, FastifyRequest} from "fastify";
 
-const User = require("../models/user.model");
+// const User = require("../models/user.model");
 
 module.exports = {
    // create: async (req, res) => { return "Hello world!" },

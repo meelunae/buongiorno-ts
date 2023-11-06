@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-interface UserModelInterface extends mongoose.Model<any> {
+interface UserModelInterface extends mongoose.Model<IUser> {
     build(attr: IUser): any
 }
 interface IUser {
@@ -18,7 +18,6 @@ interface IUser {
 const userSchema = new mongoose.Schema({
     profilePicture: {
         type: String,
-        required: true,
         default: "" // to be set
     },
     displayName: {
@@ -29,15 +28,14 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
-        // min 3 chars, max 16 chars
     },
     email: {
         type: String,
         required: true,
-        // verify it is a valid email
     },
     pronouns: {
         type: String,
+        default: ""
     },
     bio: {
         type: String,
@@ -57,5 +55,10 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
 }, { timestamps: true })
-const User = mongoose.model<any, UserModelInterface>('User', userSchema);
+const User = mongoose.model<IUser, UserModelInterface>('User', userSchema);
+// Define a static method to create new user documents
+userSchema.statics.build = (attr: IUser) => {
+    return new User(attr);
+};
+
 export { User }

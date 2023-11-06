@@ -9,5 +9,6 @@ RUN npm install
 # copies source code in container folder
 COPY . /usr/src/app
 EXPOSE 1337
-CMD ["node", "src/server.ts"]
+CMD ["npm", "run", "build"]
+CMD ["npm", "run", "start"]
 

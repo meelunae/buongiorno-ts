@@ -10,6 +10,7 @@ const server = fastify({
     logger: pino({level : "info"})
 });
 const userRoutes = require("./routes/user.routes");
+const authRoutes = require("./routes/auth.routes");
 
 server.listen({ port })
     .then((address) => console.log(`server listening on ${address}`))
@@ -18,6 +19,8 @@ server.listen({ port })
         process.exit(1);
     });
 server.register(userRoutes, {prefix: "/api/user"});
+server.register(authRoutes, {prefix: "/api/auth"});
+
 
 mongoose.connect(databaseURI)
     .then(() => server.log.info({actor: "MongoDB"}, "Connected."))
