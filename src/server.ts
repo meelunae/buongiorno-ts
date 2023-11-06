@@ -1,9 +1,13 @@
 import dotenv from "dotenv";
 import { fastify } from "fastify";
+import fastifyJwt, { FastifyJWTOptions } from '@fastify/jwt'
 import * as mongoose from "mongoose";
 import pino from "pino";
-
+import { checkRequiredEnvVariables } from "./config/environment.conf";
 dotenv.config();
+
+const requiredVariables = ["MONGO_URI", "PORT", "JWT_SECRET"];
+checkRequiredEnvVariables(requiredVariables);
 const databaseURI = `${process.env.MONGO_URI}`;
 const port = parseInt(process.env.PORT || "1337");
 const server = fastify({
@@ -18,6 +22,9 @@ server.listen({ port })
         server.log.error(`Error starting server: ${err}`);
         process.exit(1);
     });
+server.register(fastifyJwt, {
+    secret: `${process.env.JWT_SECRET}`
+})
 server.register(userRoutes, {prefix: "/api/user"});
 server.register(authRoutes, {prefix: "/api/auth"});
 

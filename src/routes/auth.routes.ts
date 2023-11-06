@@ -1,7 +1,15 @@
 import * as bcrypt from "bcrypt";
-import {FastifyInstance} from "fastify";
+import { FastifyInstance } from "fastify";
+import { Types } from "mongoose";
 import { User } from "../models/user.model";
-import * as jwt from "jsonwebtoken";
+
+// TODO: Figure out how to not break stuff when exporting both the routes function and the IAuthToken interface. Will dupe for now.
+interface IAuthToken {
+    sub: Types.ObjectId,
+    username: string,
+    exp: number,
+    iat: number,
+}
 
 interface ILoginBody {
     username: string;
@@ -80,16 +88,14 @@ async function routes(server: FastifyInstance, options: Object) {
                 return reply.send("Wrong username or password.");
             }
 
-            const tokenPayload = {
+            const tokenPayload: IAuthToken = {
                 sub: matchedUser._id,
                 username: username,
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
                 iat: Math.floor(Date.now() / 1000)
             }
-            const tokenSecretKey = process.env.JWT_SECRET!; // force unwrap to be removed
-            const token = jwt.sign(tokenPayload, tokenSecretKey);
-
-            return reply.send({"token": token, "iat": tokenPayload.iat});
+            const token = server.jwt.sign(tokenPayload)
+            return reply.send({token});
         });
 };
 module.exports = routes;
