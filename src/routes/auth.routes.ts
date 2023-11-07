@@ -24,7 +24,6 @@ interface ISignupBody {
     email: string;
     pronouns: string;
     password: string;
-    confirmPassword: string;
 }
 
 async function routes(server: FastifyInstance, options: Object) {
@@ -47,10 +46,7 @@ async function routes(server: FastifyInstance, options: Object) {
             },
         },
         async (request, reply) => {
-            const { displayName, username, email, pronouns, password, confirmPassword } = request.body;
-            if (password !== confirmPassword) {
-                return reply.code(400).send({ error: "Password and Confirm Password fields do not match." });
-            }
+            const { displayName, username, email, pronouns, password } = request.body;
 
             if (await User.exists({email})) {
                 return reply.code(409).send({ error: "This email has already been used." });
