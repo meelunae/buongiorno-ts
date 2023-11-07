@@ -66,7 +66,7 @@ async function routes(server: FastifyInstance, options: Object) {
                 displayName,
                 username,
                 email: email.toLowerCase(),
-                pronouns: pronouns || "",
+                pronouns: pronouns ?? "",
                 isActive: false,
                 password: hashedPassword
             });
