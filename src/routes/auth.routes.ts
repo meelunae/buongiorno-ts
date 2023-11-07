@@ -71,7 +71,7 @@ async function routes(server: FastifyInstance, options: Object) {
                 password: hashedPassword
             });
             await newUser.save();
-            return reply.send({"success": true, newUser});
+            return reply.send({success: true, newUser});
         }
     );
 
