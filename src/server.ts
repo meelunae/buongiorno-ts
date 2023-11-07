@@ -9,7 +9,7 @@ dotenv.config();
 const requiredVariables = ["MONGO_URI", "PORT", "JWT_SECRET"];
 checkRequiredEnvVariables(requiredVariables);
 const databaseURI = `${process.env.MONGO_URI}`;
-const port = parseInt(process.env.PORT || "1337");
+const port = parseInt(process.env.PORT ?? "1337");
 const server = fastify({
     logger: pino({level : "info"})
 });
