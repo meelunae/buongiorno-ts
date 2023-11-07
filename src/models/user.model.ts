@@ -1,7 +1,23 @@
 import mongoose from "mongoose";
 
-interface UserModelInterface extends mongoose.Model<IUser> {
-    build(attr: IUser): any
+
+interface ILeaderboardUser {
+    id: mongoose.default.Types.ObjectId;
+    profilePicture: string;
+    username: string;
+    score: number;
+    placement: number;
+}
+
+interface IUserDetails {
+    id: mongoose.default.Types.ObjectId;
+    profilePicture: string;
+    username: string;
+    displayName: string;
+    pronouns: string;
+    bio: string;
+    score: number;
+    friends: number;
 }
 interface IUser {
     profilePicture: string;
@@ -13,6 +29,10 @@ interface IUser {
     password: string;
     isActive: boolean;
     score: number;
+    friends: number;
+}
+interface UserModelInterface extends mongoose.Model<IUser> {
+    build(attr: IUser): any
 }
 
 const userSchema = new mongoose.Schema({
@@ -23,15 +43,19 @@ const userSchema = new mongoose.Schema({
     displayName: {
         type: String,
         required: true,
-        // max 64 chars?
     },
     username: {
         type: String,
         required: true,
+        unique: true,
+        trim: true,
+        match: [/^[a-zA-Z0-9_]*$/, 'Please enter a valid username']
     },
     email: {
         type: String,
         required: true,
+        trim: true,
+        unique: true
     },
     pronouns: {
         type: String,
@@ -44,7 +68,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        // store bcrypt hash
+        trim: true,
     },
     isActive: {
         type: Boolean,
@@ -56,9 +80,8 @@ const userSchema = new mongoose.Schema({
     },
 }, { timestamps: true })
 const User = mongoose.model<IUser, UserModelInterface>('User', userSchema);
-// Define a static method to create new user documents
 userSchema.statics.build = (attr: IUser) => {
     return new User(attr);
 };
 
-export { User }
+export { ILeaderboardUser, IUserDetails, User }

@@ -11,6 +11,9 @@ interface IAuthToken {
     iat: number,
 }
 
+interface IPasswordResetBody {
+    username: string;
+}
 interface ILoginBody {
     username: string;
     password: string;
@@ -94,8 +97,27 @@ async function routes(server: FastifyInstance, options: Object) {
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
                 iat: Math.floor(Date.now() / 1000)
             }
-            const token = server.jwt.sign(tokenPayload)
+            const token = server.jwt.sign(tokenPayload, {
+                expiresIn: '1d',
+            });
             return reply.send({token});
         });
+
+    server.post<{Body: IPasswordResetBody}>(
+        "/forgot",
+        async (request, reply) => {
+            const { username } = request.body;
+            const userToReset = await User.findOne({$or:[{username: username}, {email: username}]});
+            if (userToReset) {
+                const token = server.jwt.sign({ sub: userToReset._id }, {
+                    expiresIn: '30m',
+                });
+                //TODO: Send email with token instead of sending it in the reply.
+                return reply.send({token});
+            } else {
+                return reply.code(400).send("User not found.");
+            }
+        }
+    )
 };
 module.exports = routes;
