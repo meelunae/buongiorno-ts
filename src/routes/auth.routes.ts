@@ -51,14 +51,14 @@ async function routes(server: FastifyInstance, options: Object) {
             if (password !== confirmPassword) {
                 return reply.code(400).send({ error: "Password and Confirm Password fields do not match." });
             }
-            const matchedUsername = await User.findOne({username});
-            const matchedEmail = await User.findOne({email});
-            if (matchedUsername) {
-                return reply.code(400).send({ error: "This username is not available." });
+
+            if (await User.exists({email})) {
+                return reply.code(409).send({ error: "This email has already been used." });
             }
-            if (matchedEmail) {
-                return reply.code(400).send({ error: "This email has already been used." });
+            if (await User.exists({username})) {
+                return reply.code(409).send({error: "This username is not available."});
             }
+
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -66,12 +66,12 @@ async function routes(server: FastifyInstance, options: Object) {
                 displayName,
                 username,
                 email: email.toLowerCase(),
-                pronouns: pronouns || "",
+                pronouns: pronouns ?? "",
                 isActive: false,
                 password: hashedPassword
             });
             await newUser.save();
-            return reply.send({"success": true, newUser});
+            return reply.send({success: true, newUser});
         }
     );
 
