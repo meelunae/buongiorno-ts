@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-
+import { IFriend } from "./friend.model";
 
 interface ILeaderboardUser {
-    id: mongoose.default.Types.ObjectId;
+    _id: mongoose.default.Types.ObjectId;
     profilePicture: string;
     username: string;
     score: number;
@@ -10,7 +10,7 @@ interface ILeaderboardUser {
 }
 
 interface IUserDetails {
-    id: mongoose.default.Types.ObjectId;
+    _id: mongoose.default.Types.ObjectId;
     profilePicture: string;
     username: string;
     displayName: string;
@@ -29,7 +29,7 @@ interface IUser {
     password: string;
     isActive: boolean;
     score: number;
-    friends: number;
+    friends: [IFriend];
 }
 interface UserModelInterface extends mongoose.Model<IUser> {
     build(attr: IUser): any
@@ -77,6 +77,13 @@ const userSchema = new mongoose.Schema({
     score: {
         type: Number,
         default: 0
+    },
+    friends: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Friend',
+        }],
+        default: [],
     },
 }, { timestamps: true })
 const User = mongoose.model<IUser, UserModelInterface>('User', userSchema);
