@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 import { IFriend } from "./friend.model";
 
+interface IAuthToken {
+    sub: string;
+    username: string;
+    exp: number;
+    iat: number;
+}
 interface ILeaderboardUser {
     _id: mongoose.default.Types.ObjectId;
     profilePicture: string;
@@ -91,4 +97,4 @@ userSchema.statics.build = (attr: IUser) => {
     return new User(attr);
 };
 
-export { ILeaderboardUser, IUserDetails, User }
+export { IAuthToken, ILeaderboardUser, IUserDetails, User }

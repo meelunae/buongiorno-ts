@@ -1,12 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { IUserDetails, ILeaderboardUser, User } from "../models/user.model";
-
-interface IAuthToken {
-    sub: string;
-    username: string;
-    exp: number;
-    iat: number;
-}
+import { IAuthToken, IUserDetails, ILeaderboardUser, User } from "../models/user.model";
 
 interface IProfileEditRequest {
     displayName: string;
@@ -71,7 +64,7 @@ async function routes(server: FastifyInstance, options: Object) {
             userInfo.pronouns = pronouns;
             userInfo.bio = bio;
             await userInfo.save();
-            userInfo.friends = userInfo.friends
+            //userInfo.friends = userInfo.friends.length
             return reply.send({success: true, data: userInfo});
         } catch (err) {
             return reply.status(401).send({success: false, error: "Unauthorized."});
