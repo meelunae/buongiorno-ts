@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 import { IAuthToken, ILeaderboardUser, User } from "../models/user.model";
-
 interface IBuongiornoRequestParams {
     id : string;
 }
@@ -36,6 +35,7 @@ async function routes(server: FastifyInstance, options: Object) {
         await request.jwtVerify();
         const authedUser = request.user as IAuthToken;
         const initiatingUser = await User.findOne({_id: authedUser.sub});
+        console.log(initiatingUser);
         const targetUser = await User.findOne({_id: id});
         if (!initiatingUser) {
             return reply.status(401).send({success: false, error: "This authentication token does not belong to an existing user."});
@@ -46,16 +46,16 @@ async function routes(server: FastifyInstance, options: Object) {
         if (id === authedUser.sub) {
             return reply.status(400).send({success: false, error: "You cannot send a Buongiorno to yourself."});
         }
-        const friend = initiatingUser.friends.find((friend) => friend.friend_id.toString() === id);
+        const friend = initiatingUser.friends.find((friend) => friend.friendId.toString() === id);
         if (!friend) {
             return reply.status(400).send({success: false, error: "You can only say Buongiorno to someone you have added as a friend."});
         }
         const currentTime = new Date();
         const twentyFourHoursAgo = new Date(currentTime.getTime() - 60 * 60 * 24 * 1000);
-        if (twentyFourHoursAgo < new Date(friend.lastBuongiornoTime)) {
+        if (new Date(friend.lastBuongiornoTime) > twentyFourHoursAgo) {
             return reply.status(400).send({success: false, error: `You have to wait 24 hours before wishing @${targetUser.username} Buongiorno again`});
         }
-        const friendIndex = initiatingUser.friends.findIndex((friend) => friend.friend_id.toString() === id);
+        const friendIndex = initiatingUser.friends.findIndex((friend) => friend.friendId.toString() === id);
         initiatingUser.friends[friendIndex].lastBuongiornoTime = currentTime;
         initiatingUser.score += 2;
         targetUser.score += 1;

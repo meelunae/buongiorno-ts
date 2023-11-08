@@ -16,6 +16,7 @@ const server = fastify({
 const userRoutes = require("./routes/user.routes");
 const authRoutes = require("./routes/auth.routes");
 const buongiornoRoutes = require("./routes/buongiorno.routes");
+const friendRoutes = require("./routes/friends.routes");
 
 server.listen({ port })
     .then((address) => console.log(`server listening on ${address}`))
@@ -29,6 +30,7 @@ server.register(fastifyJwt, {
 server.register(userRoutes, {prefix: "/api/user"});
 server.register(authRoutes, {prefix: "/api/auth"});
 server.register(buongiornoRoutes, {prefix: "/api/buongiorno"});
+server.register(friendRoutes, {prefix: "/api/friends"});
 
 
 

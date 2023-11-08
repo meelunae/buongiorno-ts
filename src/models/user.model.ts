@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { IFriend } from "./friend.model";
 
 interface IAuthToken {
     sub: string;
@@ -40,6 +39,24 @@ interface IUser {
 interface UserModelInterface extends mongoose.Model<IUser> {
     build(attr: IUser): any
 }
+interface IFriend {
+    friendId: mongoose.Types.ObjectId;
+    lastBuongiornoTime: Date;
+    friendsSince: Date;
+}
+
+const friendSchema = new mongoose.Schema({
+    friendId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+    lastBuongiornoTime: {
+        type: Date
+    },
+    friendsSince: {
+        type: Date
+    },
+}, { timestamps: false })
 
 const userSchema = new mongoose.Schema({
     profilePicture: {
@@ -85,16 +102,14 @@ const userSchema = new mongoose.Schema({
         default: 0
     },
     friends: {
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Friend',
-        }],
+        type: [friendSchema],
         default: [],
     },
 }, { timestamps: true })
 const User = mongoose.model<IUser, UserModelInterface>('User', userSchema);
+
 userSchema.statics.build = (attr: IUser) => {
     return new User(attr);
 };
 
-export { IAuthToken, ILeaderboardUser, IUserDetails, User }
+export { IAuthToken, ILeaderboardUser, IFriend, IUserDetails, User }
