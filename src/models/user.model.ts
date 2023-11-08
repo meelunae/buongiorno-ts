@@ -23,6 +23,7 @@ interface IUserDetails {
     bio: string;
     score: number;
     friends: number;
+    friendRequestPending: boolean;
 }
 interface IUser {
     profilePicture: string;
@@ -35,6 +36,7 @@ interface IUser {
     isActive: boolean;
     score: number;
     friends: [IFriend];
+    friendRequests: [mongoose.Types.ObjectId];
 }
 interface UserModelInterface extends mongoose.Model<IUser> {
     build(attr: IUser): any
@@ -105,6 +107,13 @@ const userSchema = new mongoose.Schema({
         type: [friendSchema],
         default: [],
     },
+    friendRequests: {
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        default: [],
+    }
 }, { timestamps: true })
 const User = mongoose.model<IUser, UserModelInterface>('User', userSchema);
 

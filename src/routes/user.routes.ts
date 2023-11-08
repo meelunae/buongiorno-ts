@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { IAuthToken, IUserDetails, ILeaderboardUser, User } from "../models/user.model";
+import mongoose from "mongoose";
 
 interface IProfileEditRequest {
     displayName: string;
@@ -45,6 +46,7 @@ async function routes(server: FastifyInstance, options: Object) {
                 bio: fetchedUser.bio,
                 score: fetchedUser.score,
                 friends: fetchedUser.friends.length,
+                friendRequestPending: fetchedUser.friendRequests.includes(new mongoose.Types.ObjectId(authedUser.sub)),
             }
             return reply.send({success: true, data: userDetails});
         } catch (err) {
