@@ -40,7 +40,7 @@ server.addHook("onRequest", async function auth(request: FastifyRequest, reply: 
     try {
         if (request.url === "/api/auth/login" || request.url === "/api/auth/signup") return;
         await request.jwtVerify({ignoreExpiration: true});
-        const refreshToken = request.headers.bg_refresh_token as string;
+        const refreshToken = request.headers["bg-refresh-token"] as string;
         if (!refreshToken) {
             return reply.status(401).send({success: false, error: "Refresh token not valid."});
         }
