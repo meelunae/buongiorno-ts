@@ -1,9 +1,12 @@
+import fastifyCors from "@fastify/cors";
 import dotenv from "dotenv";
-import { fastify } from "fastify";
-import fastifyJwt, { FastifyJWTOptions } from '@fastify/jwt'
+import {fastify, FastifyReply, FastifyRequest} from "fastify";
+import fastifyJwt from '@fastify/jwt'
+import helmet from '@fastify/helmet'
 import * as mongoose from "mongoose";
 import pino from "pino";
 import { checkRequiredEnvVariables } from "./config/environment.conf";
+import {IAccessToken } from "./routes/auth.routes";
 dotenv.config();
 
 const requiredVariables = ["MONGO_URI", "PORT", "JWT_SECRET"];
@@ -18,7 +21,7 @@ const authRoutes = require("./routes/auth.routes");
 const buongiornoRoutes = require("./routes/buongiorno.routes");
 const friendRoutes = require("./routes/friends.routes");
 
-server.listen({ port })
+server.listen({ port, host: "0.0.0.0" })
     .then((address) => console.log(`server listening on ${address}`))
     .catch(err => {
         server.log.error(`Error starting server: ${err}`);
@@ -26,11 +29,37 @@ server.listen({ port })
     });
 server.register(fastifyJwt, {
     secret: `${process.env.JWT_SECRET}`
-})
+});
+server.register(fastifyCors);
+server.register(helmet);
 server.register(userRoutes, {prefix: "/api/user"});
 server.register(authRoutes, {prefix: "/api/auth"});
 server.register(buongiornoRoutes, {prefix: "/api/buongiorno"});
 server.register(friendRoutes, {prefix: "/api/friends"});
+server.addHook("onRequest", async function auth(request: FastifyRequest, reply: FastifyReply) {
+    try {
+        if (request.url === "/api/auth/login" || request.url === "/api/auth/signup") return;
+        await request.jwtVerify({ignoreExpiration: true});
+        const refreshToken = request.headers.bg_refresh_token as string;
+        if (!refreshToken) {
+            return reply.status(401).send({success: false, error: "Refresh token not valid."});
+        }
+        server.jwt.verify(refreshToken);
+        const tokenPayload = request.user as IAccessToken;
+        const expirationDate = new Date(tokenPayload.exp * 1000); // converting to milliseconds
+        const currentDate = new Date();
+        // Check if token has expired to issue a new one
+        if (currentDate > expirationDate && refreshToken) {
+            tokenPayload.exp = Math.floor(Date.now() / 1000) + (60 * 10);
+            const accessToken = server.jwt.sign(tokenPayload, {
+                expiresIn: '10m',
+            });
+            return reply.send({accessToken});
+        }
+    } catch (err) {
+        return reply.status(401).send({success: false, error: err});
+    }
+});
 
 
 

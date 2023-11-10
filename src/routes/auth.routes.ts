@@ -1,14 +1,19 @@
 import * as bcrypt from "bcrypt";
 import { FastifyInstance } from "fastify";
-import { Types } from "mongoose";
+import mongoose from "mongoose";
 import { User } from "../models/user.model";
 
-// TODO: Figure out how to not break stuff when exporting both the routes function and the IAuthToken interface. Will dupe for now.
-interface IAuthToken {
-    sub: Types.ObjectId,
-    username: string,
-    exp: number,
-    iat: number,
+// TODO: Figure out how to not break stuff when exporting both the routes function and the IAccessToken interface. Will dupe for now.
+export interface IAccessToken {
+    sub: mongoose.Types.ObjectId;
+    username: string;
+    exp: number;
+    iat: number;
+    sid: mongoose.Types.ObjectId;
+}
+
+export interface IRefreshToken {
+    sid: mongoose.Types.ObjectId;
 }
 
 interface IPasswordResetBody {
@@ -27,6 +32,7 @@ interface ISignupBody {
 }
 
 async function routes(server: FastifyInstance, options: Object) {
+    // Create a new account
     server.post<{ Body: ISignupBody }>(
         "/signup",
         {
@@ -71,6 +77,7 @@ async function routes(server: FastifyInstance, options: Object) {
         }
     );
 
+    // Login
     server.post<{Body: ILoginBody}>(
         "/login",
         async (request, reply) => {
@@ -87,18 +94,25 @@ async function routes(server: FastifyInstance, options: Object) {
                 return reply.send("Wrong username or password.");
             }
 
-            const tokenPayload: IAuthToken = {
+            const sessionId = new mongoose.Types.ObjectId();
+            const accessTokenPayload: IAccessToken = {
                 sub: matchedUser._id,
                 username: username,
-                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-                iat: Math.floor(Date.now() / 1000)
-            }
-            const token = server.jwt.sign(tokenPayload, {
-                expiresIn: '1d',
+                exp: Math.floor(Date.now() / 1000) + 60 * 10,
+                iat: Math.floor(Date.now() / 1000),
+                sid: sessionId,
+            };
+            const refreshTokenPayload : IRefreshToken = {sid: sessionId};
+            const accessToken = server.jwt.sign(accessTokenPayload, {
+                expiresIn: '5m',
             });
-            return reply.send({token});
+            const refreshToken = server.jwt.sign(refreshTokenPayload, {
+                expiresIn: '1y',
+            })
+            return reply.send({accessToken: accessToken, refreshToken: refreshToken});
         });
 
+    // Forgot password
     server.post<{Body: IPasswordResetBody}>(
         "/forgot",
         async (request, reply) => {
@@ -115,5 +129,5 @@ async function routes(server: FastifyInstance, options: Object) {
             }
         }
     )
-};
+}
 module.exports = routes;
