@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { IAuthToken, IUserDetails, ILeaderboardUser, User } from "../models/user.model";
+import { IUserDetails, User } from "../models/user.model";
 import mongoose from "mongoose";
+import {IAccessToken} from "./auth.routes";
 
 interface IProfileEditRequest {
     displayName: string;
@@ -11,10 +12,11 @@ interface IUserRequest {
     username: string;
 }
 async function routes(server: FastifyInstance, options: Object) {
+    // Get logged in user info
     server.get("/", async (request, reply) => {
         try {
             await request.jwtVerify();
-            const authedUser = request.user as IAuthToken;
+            const authedUser = request.user as IAccessToken;
             const userInfo = await User.findOne({_id: authedUser.sub});
             if (!userInfo) {
                 return reply.status(401).send({success: false, error: "This authentication token does not belong to an existing user."});
@@ -25,10 +27,11 @@ async function routes(server: FastifyInstance, options: Object) {
         }
     });
 
+    // Get user profile details for a specific user
     server.get<{ Params: IUserRequest}>("/:username", async (request, reply) => {
         try {
             await request.jwtVerify();
-            const authedUser = request.user as IAuthToken;
+            const authedUser = request.user as IAccessToken;
             if (!await User.exists({_id: authedUser.sub})) {
                 return reply.status(401).send({success: false, error: "This authentication token does not belong to an existing user."});
             }
@@ -53,10 +56,12 @@ async function routes(server: FastifyInstance, options: Object) {
             return reply.status(401).send({success: false, error: "Unauthorized."});
         }
     })
+
+    // Patch profile info for logged-in user (display name, bio, pronouns)
     server.patch<{ Body: IProfileEditRequest }>("/", async (request, reply) => {
         try {
             await request.jwtVerify();
-            const authedUser = request.user as IAuthToken;
+            const authedUser = request.user as IAccessToken;
             const { displayName, pronouns, bio } = request.body;
             const userInfo = await User.findOne({_id: authedUser.sub});
             if (!userInfo) {
@@ -66,7 +71,6 @@ async function routes(server: FastifyInstance, options: Object) {
             userInfo.pronouns = pronouns;
             userInfo.bio = bio;
             await userInfo.save();
-            //userInfo.friends = userInfo.friends.length
             return reply.send({success: true, data: userInfo});
         } catch (err) {
             return reply.status(401).send({success: false, error: "Unauthorized."});

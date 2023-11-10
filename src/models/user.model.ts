@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
+import { IFriendDetailsDTO } from "../routes/friends.routes";
 
-interface IAuthToken {
-    sub: string;
-    username: string;
-    exp: number;
-    iat: number;
-}
 interface ILeaderboardUser {
     _id: mongoose.default.Types.ObjectId;
     profilePicture: string;
@@ -42,7 +37,7 @@ interface UserModelInterface extends mongoose.Model<IUser> {
     build(attr: IUser): any
 }
 interface IFriend {
-    friendId: mongoose.Types.ObjectId;
+    friendId: mongoose.Types.ObjectId | IFriendDetailsDTO;
     lastBuongiornoTime: Date;
     friendsSince: Date;
 }
@@ -121,4 +116,4 @@ userSchema.statics.build = (attr: IUser) => {
     return new User(attr);
 };
 
-export { IAuthToken, ILeaderboardUser, IFriend, IUserDetails, User }
+export { ILeaderboardUser, IFriend, IUserDetails, User }

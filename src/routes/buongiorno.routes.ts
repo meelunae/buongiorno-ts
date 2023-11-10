@@ -1,14 +1,17 @@
 import { FastifyInstance } from "fastify";
-import { IAuthToken, ILeaderboardUser, User } from "../models/user.model";
+import { ILeaderboardUser, User } from "../models/user.model";
+import { IAccessToken } from "./auth.routes";
 interface IBuongiornoRequestParams {
     id : string;
 }
 async function routes(server: FastifyInstance, options: Object) {
+
+    // View Buongiorno leaderboard sorted by score
     server.get("/leaderboard", async (request, reply) => {
         try {
-            var rankings: ILeaderboardUser[] = [];
+            const rankings: ILeaderboardUser[] = [];
             await request.jwtVerify();
-            const authedUser = request.user as IAuthToken;
+            const authedUser = request.user as IAccessToken;
             if (!await User.exists({_id: authedUser.sub})) {
                 return reply.status(401).send({success: false, error: "This authentication token does not belong to an existing user."});
             }
@@ -30,10 +33,12 @@ async function routes(server: FastifyInstance, options: Object) {
             return reply.status(401).send({success: false, error: 'Unauthorized' });
         }
     })
+
+    // Send a Buongiorno to another user
     server.post<{Params: IBuongiornoRequestParams}>("/:id", async (request, reply) => {
         const { id } = request.params;
         await request.jwtVerify();
-        const authedUser = request.user as IAuthToken;
+        const authedUser = request.user as IAccessToken;
         const initiatingUser = await User.findOne({_id: authedUser.sub});
         console.log(initiatingUser);
         const targetUser = await User.findOne({_id: id});
@@ -43,7 +48,7 @@ async function routes(server: FastifyInstance, options: Object) {
         if (!targetUser) {
             return reply.status(401).send({success: false, error: "This user does not exist."});
         }
-        if (id === authedUser.sub) {
+        if (id === authedUser.sub.toString()) {
             return reply.status(400).send({success: false, error: "You cannot send a Buongiorno to yourself."});
         }
         const friend = initiatingUser.friends.find((friend) => friend.friendId.toString() === id);
@@ -64,7 +69,5 @@ async function routes(server: FastifyInstance, options: Object) {
         return reply.send({success: true, message: `Successfully sent a Buongiorno to ${targetUser.username}`});
     })
 }
-
-
 
 module.exports = routes;
